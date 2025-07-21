@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -17,6 +18,7 @@ import { useLoanStatus } from '@/hooks/useLoanStatus';
 export default function HomeScreen() {
   const { user } = useAuth();
   const { loanData, loading, refetch } = useLoanStatus();
+  const [buttonLoading, setButtonLoading] = useState<string | null>(null);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -26,6 +28,29 @@ export default function HomeScreen() {
     }, [user, refetch])
   );
 
+  const handleNavigation = async (route: string, buttonId: string) => {
+    try {
+      setButtonLoading(buttonId);
+      await new Promise(resolve => setTimeout(resolve, 100)); // Small delay to show loading
+      router.push(route as any);
+    } catch (error) {
+      console.error('Navigation error:', error);
+    } finally {
+      setButtonLoading(null);
+    }
+  };
+
+  const handleLoanAmountSelect = async () => {
+    try {
+      setButtonLoading('loan-amount');
+      await new Promise(resolve => setTimeout(resolve, 100));
+      router.push('/loan-amount');
+    } catch (error) {
+      console.error('Navigation error:', error);
+    } finally {
+      setButtonLoading(null);
+    }
+  };
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'approved':
@@ -76,8 +101,13 @@ export default function HomeScreen() {
           </Text>
           <TouchableOpacity
             style={styles.loginButton}
-            onPress={() => router.push('/auth')}>
-            <Text style={styles.loginButtonText}>Get Started</Text>
+            onPress={() => handleNavigation('/auth', 'get-started')}
+            disabled={buttonLoading === 'get-started'}>
+            {buttonLoading === 'get-started' ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Text style={styles.loginButtonText}>Get Started</Text>
+            )}
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -108,10 +138,15 @@ export default function HomeScreen() {
               {!loanData.loanAmount && (
                 <TouchableOpacity
                   style={styles.selectAmountButton}
-                  onPress={() => router.push('/loan-amount')}>
-                  <Text style={styles.selectAmountButtonText}>
-                    Select Loan Amount
-                  </Text>
+                  onPress={handleLoanAmountSelect}
+                  disabled={buttonLoading === 'loan-amount'}>
+                  {buttonLoading === 'loan-amount' ? (
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                  ) : (
+                    <Text style={styles.selectAmountButtonText}>
+                      Select Loan Amount
+                    </Text>
+                  )}
                 </TouchableOpacity>
               )}
               <View style={styles.detailRow}>
@@ -137,9 +172,14 @@ export default function HomeScreen() {
         {!loanData && (
           <TouchableOpacity
             style={styles.applyButton}
-            onPress={() => router.push('/(tabs)/application')}>
+            onPress={() => handleNavigation('/(tabs)/application', 'apply')}
+            disabled={buttonLoading === 'apply'}>
             <CreditCard size={24} color="#FFFFFF" />
-            <Text style={styles.applyButtonText}>Apply for Loan</Text>
+            {buttonLoading === 'apply' ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Text style={styles.applyButtonText}>Apply for Loan</Text>
+            )}
           </TouchableOpacity>
         )}
 
@@ -163,8 +203,13 @@ export default function HomeScreen() {
           
           <TouchableOpacity
             style={styles.adminButton}
-            onPress={() => router.push('/admin')}>
-            <Text style={styles.adminButtonText}>Admin Panel</Text>
+            onPress={() => handleNavigation('/admin', 'admin')}
+            disabled={buttonLoading === 'admin'}>
+            {buttonLoading === 'admin' ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Text style={styles.adminButtonText}>Admin Panel</Text>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>
