@@ -43,16 +43,20 @@ export const submitLoanApplication = async (
   userId: string,
   applicationData: ApplicationData
 ): Promise<void> => {
+  console.log('Starting application submission...');
+  
   // Check if user already has a pending application
   const existingApp = await getUserApplication(userId);
   if (existingApp && existingApp.status === 'under_review') {
     throw new Error('You already have a pending application. Please wait for review.');
   }
 
-  // Simulate processing time
-  await new Promise(resolve => setTimeout(resolve, 1500));
+  // Reduced processing time to prevent hanging
+  await new Promise(resolve => setTimeout(resolve, 500));
 
   try {
+    console.log('Creating application object...');
+    
     const newApplication: LoanApplication = {
       id: 'app_' + Date.now(),
       userId,
@@ -68,6 +72,8 @@ export const submitLoanApplication = async (
       selfieImageUrl: applicationData.selfieImage ? createImagePlaceholder('selfie') : undefined,
     };
 
+    console.log('Checking auto-approval...');
+    
     // Auto-approve if income >= 50000
     if (newApplication.monthlyIncome >= 50000) {
       newApplication.status = 'approved';
@@ -76,9 +82,13 @@ export const submitLoanApplication = async (
       newApplication.repaymentDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year from now
     }
 
+    console.log('Saving application...');
+    
     // Store user application
     await AsyncStorage.setItem(`userApplication_${userId}`, JSON.stringify(newApplication));
 
+    console.log('Updating applications list...');
+    
     // Update all applications list
     const existingApps = await AsyncStorage.getItem('allApplications');
     let allApplications = existingApps ? JSON.parse(existingApps) : [];

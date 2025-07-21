@@ -6,6 +6,7 @@ import {
   TextInput,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
@@ -41,6 +42,9 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
+      // Add small delay to prevent UI hanging
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
       const id = await sendOtpWithPhoneNumber(formattedNumber);
       setVerificationId(id);
       setPhoneNumber(formattedNumber);
@@ -62,6 +66,9 @@ export default function LoginScreen() {
 
     setLoading(true);
     try {
+      // Add small delay to prevent UI hanging
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
       const userData = await confirmOTP(verificationId, otp);
       await signIn(userData);
       router.replace('/(tabs)');
@@ -125,9 +132,11 @@ export default function LoginScreen() {
               style={[styles.button, loading && styles.disabledButton]}
               onPress={sendOTP}
               disabled={loading}>
-              <Text style={styles.buttonText}>
-                {loading ? 'Sending OTP...' : 'Send OTP'}
-              </Text>
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={styles.buttonText}>Send OTP</Text>
+              )}
             </TouchableOpacity>
           </>
         ) : (
@@ -153,9 +162,11 @@ export default function LoginScreen() {
               style={[styles.button, loading && styles.disabledButton]}
               onPress={verifyOTP}
               disabled={loading}>
-              <Text style={styles.buttonText}>
-                {loading ? 'Verifying...' : 'Verify OTP'}
-              </Text>
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              ) : (
+                <Text style={styles.buttonText}>Verify OTP</Text>
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity

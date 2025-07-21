@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Alert,
   Image,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Camera, Upload, User, MapPin, DollarSign, Briefcase } from 'lucide-react-native';
@@ -33,6 +34,7 @@ export default function ApplicationScreen() {
   const [step, setStep] = useState(1);
   const [canApply, setCanApply] = useState(false);
   const [checkingEligibility, setCheckingEligibility] = useState(true);
+  const [imageLoading, setImageLoading] = useState<string | null>(null);
   const [formData, setFormData] = useState<ApplicationData>({
     fullName: '',
     nationalId: '',
@@ -69,34 +71,54 @@ export default function ApplicationScreen() {
   };
 
   const pickImage = async (type: 'cnic' | 'selfie') => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: type === 'cnic' ? [4, 3] : [1, 1],
-      quality: 0.8,
-    });
+    try {
+      setImageLoading(type);
+      await new Promise(resolve => setTimeout(resolve, 100)); // Small delay for UI feedback
+      
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: type === 'cnic' ? [4, 3] : [1, 1],
+        quality: 0.5, // Reduced quality to prevent hanging
+      });
 
-    if (!result.canceled) {
-      const field = type === 'cnic' ? 'cnicImage' : 'selfieImage';
-      updateFormData(field, result.assets[0].uri);
+      if (!result.canceled) {
+        const field = type === 'cnic' ? 'cnicImage' : 'selfieImage';
+        updateFormData(field, result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'Failed to select image. Please try again.');
+    } finally {
+      setImageLoading(null);
     }
   };
 
   const takeSelfie = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Camera permission is required for face verification');
-      return;
-    }
+    try {
+      setImageLoading('selfie');
+      
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Camera permission is required for face verification');
+        setImageLoading(null);
+        return;
+      }
 
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.5, // Reduced quality to prevent hanging
+      });
 
-    if (!result.canceled) {
-      updateFormData('selfieImage', result.assets[0].uri);
+      if (!result.canceled) {
+        updateFormData('selfieImage', result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error taking selfie:', error);
+      Alert.alert('Error', 'Failed to take photo. Please try again.');
+    } finally {
+      setImageLoading(null);
     }
   };
 
@@ -167,8 +189,8 @@ export default function ApplicationScreen() {
 
     setLoading(true);
     try {
-      // Show loading feedback to user
-      console.log('Submitting application...');
+      // Add small delay to prevent UI hanging
+      await new Promise(resolve => setTimeout(resolve, 200));
       
       await submitLoanApplication(user!.uid, formData);
       await refetch(); // Refresh loan status
@@ -296,11 +318,18 @@ export default function ApplicationScreen() {
       
       <TouchableOpacity
         style={styles.uploadButton}
-        onPress={() => pickImage('cnic')}>
-        <Upload size={24} color="#3B82F6" />
-        <Text style={styles.uploadButtonText}>
-          {formData.cnicImage ? 'Change CNIC Image' : 'Upload CNIC Image'}
-        </Text>
+        onPress={() => pickImage('cnic')}
+        disabled={imageLoading === 'cnic'}>
+        {imageLoading === 'cnic' ? (
+          <ActivityIndicator color="#3B82F6" size="small" />
+        ) : (
+          <>
+            <Upload size={24} color="#3B82F6" />
+            <Text style={styles.uploadButtonText}>
+              {formData.cnicImage ? 'Change CNIC Image' : 'Upload CNIC Image'}
+            </Text>
+          </>
+        )}
       </TouchableOpacity>
 
       {formData.cnicImage && (
@@ -316,11 +345,18 @@ export default function ApplicationScreen() {
       
       <TouchableOpacity
         style={styles.uploadButton}
-        onPress={takeSelfie}>
-        <Camera size={24} color="#3B82F6" />
-        <Text style={styles.uploadButtonText}>
-          {formData.selfieImage ? 'Retake Selfie' : 'Take Selfie'}
-        </Text>
+        onPress={takeSelfie}
+        disabled={imageLoading === 'selfie'}>
+        {imageLoading === 'selfie' ? (
+          <ActivityIndicator color="#3B82F6" size="small" />
+        ) : (
+          <>
+            <Camera size={24} color="#3B82F6" />
+            <Text style={styles.uploadButtonText}>
+              {formData.selfieImage ? 'Retake Selfie' : 'Take Selfie'}
+            </Text>
+          </>
+        )}
       </TouchableOpacity>
 
       {formData.selfieImage && (
@@ -400,8 +436,11 @@ export default function ApplicationScreen() {
                 <TouchableOpacity
                   style={styles.reapplyButton}
                   onPress={() => {
+                    setCheckingEligibility(true);
                     setCanApply(true);
-                    checkApplicationEligibility();
+                    setTimeout(() => {
+                      checkApplicationEligibility();
+                    }, 100);
                   }}>
                   <Text style={styles.reapplyButtonText}>Apply Again</Text>
                 </TouchableOpacity>
