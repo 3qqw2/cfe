@@ -41,6 +41,11 @@ export default function ProfileScreen() {
         <View style={styles.notLoggedIn}>
           <User size={80} color="#6B7280" />
           <Text style={styles.notLoggedInText}>Please log in to view your profile</Text>
+          <TouchableOpacity 
+            style={styles.loginButton}
+            onPress={() => router.push('/auth')}>
+            <Text style={styles.loginButtonText}>Go to Login</Text>
+          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -199,5 +204,17 @@ const styles = StyleSheet.create({
     color: '#6B7280',
     textAlign: 'center',
     marginTop: 20,
+  },
+  loginButton: {
+    backgroundColor: '#3B82F6',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+    marginTop: 20,
+  },
+  loginButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

@@ -7,35 +7,58 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { CreditCard, User, FileText, Settings } from 'lucide-react-native';
+import { CreditCard, User, FileText, Settings, LogOut } from 'lucide-react-native';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function HomeScreen() {
+  const { user, signOut, isLoggedIn } = useAuth();
+
   const handleNavigation = (route: string) => {
     router.push(route as any);
   };
 
+  const handleLogout = async () => {
+    await signOut();
+    router.replace('/auth');
+  };
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.header}>
           <CreditCard size={60} color="#3B82F6" />
           <Text style={styles.title}>Pakistani Loan App</Text>
-          <Text style={styles.subtitle}>Quick and Easy Loans</Text>
+          <Text style={styles.subtitle}>
+            {isLoggedIn() ? `Welcome, ${user?.displayName || 'User'}!` : 'Quick and Easy Loans'}
+          </Text>
+          {isLoggedIn() && (
+            <Text style={styles.phoneText}>📱 {user?.phoneNumber}</Text>
+          )}
         </View>
 
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => router.push('/auth')}>
-            <User size={24} color="#FFFFFF" />
-            <Text style={styles.buttonText}>Login / Register</Text>
-          </TouchableOpacity>
+          {!isLoggedIn() ? (
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => router.push('/auth')}>
+              <User size={24} color="#FFFFFF" />
+              <Text style={styles.buttonText}>Login / Register</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[styles.button, styles.logoutButton]}
+              onPress={handleLogout}>
+              <LogOut size={24} color="#FFFFFF" />
+              <Text style={styles.buttonText}>Logout</Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={styles.button}
             onPress={() => router.push('/(tabs)/application')}>
             <FileText size={24} color="#FFFFFF" />
-            <Text style={styles.buttonText}>Apply for Loan</Text>
+            <Text style={styles.buttonText}>
+              {isLoggedIn() ? 'Apply for Loan' : 'View Loan Info'}
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -52,6 +75,9 @@ export default function HomeScreen() {
           <Text style={styles.featureText}>• Competitive rates</Text>
           <Text style={styles.featureText}>• Secure & encrypted</Text>
           <Text style={styles.featureText}>• Pakistani phone verification</Text>
+          {isLoggedIn() && (
+            <Text style={styles.featureText}>✅ You are logged in!</Text>
+          )}
         </View>
       </View>
     </SafeAreaView>
@@ -124,5 +150,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#6B7280',
     marginBottom: 8,
+  },
+  phoneText: {
+    fontSize: 14,
+    color: '#10B981',
+    marginTop: 5,
+    fontWeight: '500',
+  },
+  logoutButton: {
+    backgroundColor: '#EF4444',
   },
 });

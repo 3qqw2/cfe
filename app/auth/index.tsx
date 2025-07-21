@@ -10,8 +10,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { Phone, MessageSquare } from 'lucide-react-native';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function LoginScreen() {
+  const { mockSignIn } = useAuth();
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState(1);
@@ -46,9 +48,12 @@ export default function LoginScreen() {
     
     // Accept any 6-digit OTP for demo
     if (otp.length === 6) {
+      // Login the user
+      mockSignIn(phoneNumber);
+      
       setLoading(false);
-      Alert.alert('Success', 'Login successful!', [
-        { text: 'OK', onPress: () => router.replace('/(tabs)') }
+      Alert.alert('Success', 'Login successful! Welcome to Pakistani Loan App!', [
+        { text: 'Continue', onPress: () => router.replace('/(tabs)') }
       ]);
     } else {
       setLoading(false);
