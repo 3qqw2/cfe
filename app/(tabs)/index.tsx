@@ -1,218 +1,59 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
-  Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
-import { CreditCard, Clock, CircleCheck as CheckCircle, Circle as XCircle, Bell } from 'lucide-react-native';
-import { useAuth } from '@/hooks/useAuth';
-import { useLoanStatus } from '@/hooks/useLoanStatus';
+import { CreditCard, User, FileText, Settings } from 'lucide-react-native';
 
 export default function HomeScreen() {
-  const { user } = useAuth();
-  const { loanData, loading, refetch } = useLoanStatus();
-  const [buttonLoading, setButtonLoading] = useState<string | null>(null);
-
-  useFocusEffect(
-    React.useCallback(() => {
-      if (user) {
-        refetch();
-      }
-    }, [user, refetch])
-  );
-
-  const handleNavigation = async (route: string, buttonId: string) => {
-    try {
-      setButtonLoading(buttonId);
-      await new Promise(resolve => setTimeout(resolve, 100)); // Small delay to show loading
-      router.push(route as any);
-    } catch (error) {
-      console.error('Navigation error:', error);
-    } finally {
-      setButtonLoading(null);
-    }
+  const handleNavigation = (route: string) => {
+    router.push(route as any);
   };
-
-  const handleLoanAmountSelect = async () => {
-    try {
-      setButtonLoading('loan-amount');
-      await new Promise(resolve => setTimeout(resolve, 100));
-      router.push('/loan-amount');
-    } catch (error) {
-      console.error('Navigation error:', error);
-    } finally {
-      setButtonLoading(null);
-    }
-  };
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return <CheckCircle size={24} color="#10B981" />;
-      case 'rejected':
-        return <XCircle size={24} color="#EF4444" />;
-      case 'under_review':
-        return <Clock size={24} color="#F59E0B" />;
-      default:
-        return <CreditCard size={24} color="#6B7280" />;
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return 'Approved';
-      case 'rejected':
-        return 'Rejected';
-      case 'under_review':
-        return 'Under Review';
-      default:
-        return 'Not Applied';
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'approved':
-        return '#10B981';
-      case 'rejected':
-        return '#EF4444';
-      case 'under_review':
-        return '#F59E0B';
-      default:
-        return '#6B7280';
-    }
-  };
-
-  if (!user) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.welcomeContainer}>
-          <CreditCard size={80} color="#3B82F6" />
-          <Text style={styles.welcomeTitle}>Welcome to LoanApp</Text>
-          <Text style={styles.welcomeSubtitle}>
-            Get instant loans with quick approval
-          </Text>
-          <TouchableOpacity
-            style={styles.loginButton}
-            onPress={() => handleNavigation('/auth', 'get-started')}
-            disabled={buttonLoading === 'get-started'}>
-            {buttonLoading === 'get-started' ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <Text style={styles.loginButtonText}>Get Started</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-    );
-  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <View style={styles.content}>
         <View style={styles.header}>
-          <Text style={styles.greeting}>Hello, {user.displayName || 'User'}</Text>
-          <TouchableOpacity style={styles.notificationButton}>
-            <Bell size={24} color="#6B7280" />
-          </TouchableOpacity>
+          <CreditCard size={60} color="#3B82F6" />
+          <Text style={styles.title}>Pakistani Loan App</Text>
+          <Text style={styles.subtitle}>Quick and Easy Loans</Text>
         </View>
 
-        <View style={styles.statusCard}>
-          <View style={styles.statusHeader}>
-            {getStatusIcon(loanData?.status)}
-            <Text style={styles.statusTitle}>Loan Status</Text>
-          </View>
-          <Text style={[styles.statusText, { color: getStatusColor(loanData?.status) }]}>
-            {getStatusText(loanData?.status)}
-          </Text>
-          
-          {loanData?.status === 'approved' && (
-            <View style={styles.loanDetails}>
-              {!loanData.loanAmount && (
-                <TouchableOpacity
-                  style={styles.selectAmountButton}
-                  onPress={handleLoanAmountSelect}
-                  disabled={buttonLoading === 'loan-amount'}>
-                  {buttonLoading === 'loan-amount' ? (
-                    <ActivityIndicator color="#FFFFFF" size="small" />
-                  ) : (
-                    <Text style={styles.selectAmountButtonText}>
-                      Select Loan Amount
-                    </Text>
-                  )}
-                </TouchableOpacity>
-              )}
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Loan Amount:</Text>
-                <Text style={styles.detailValue}>
-                  {loanData.loanAmount ? `Rs. ${loanData.loanAmount.toLocaleString()}` : 'Not selected'}
-                </Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Interest Rate:</Text>
-                <Text style={styles.detailValue}>{loanData.interestRate}%</Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Repayment Date:</Text>
-                <Text style={styles.detailValue}>
-                  {loanData.repaymentDate?.toLocaleDateString()}
-                </Text>
-              </View>
-            </View>
-          )}
-        </View>
-
-        {!loanData && (
+        <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={styles.applyButton}
-            onPress={() => handleNavigation('/(tabs)/application', 'apply')}
-            disabled={buttonLoading === 'apply'}>
-            <CreditCard size={24} color="#FFFFFF" />
-            {buttonLoading === 'apply' ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <Text style={styles.applyButtonText}>Apply for Loan</Text>
-            )}
+            style={styles.button}
+            onPress={() => handleNavigation('/auth')}>
+            <User size={24} color="#FFFFFF" />
+            <Text style={styles.buttonText}>Login / Register</Text>
           </TouchableOpacity>
-        )}
 
-        <View style={styles.featuresContainer}>
-          <Text style={styles.featuresTitle}>Why Choose LoanApp?</Text>
-          
-          <View style={styles.featureCard}>
-            <CheckCircle size={20} color="#10B981" />
-            <Text style={styles.featureText}>Quick approval in minutes</Text>
-          </View>
-          
-          <View style={styles.featureCard}>
-            <CheckCircle size={20} color="#10B981" />
-            <Text style={styles.featureText}>Competitive interest rates</Text>
-          </View>
-          
-          <View style={styles.featureCard}>
-            <CheckCircle size={20} color="#10B981" />
-            <Text style={styles.featureText}>Secure and encrypted</Text>
-          </View>
-          
           <TouchableOpacity
-            style={styles.adminButton}
-            onPress={() => handleNavigation('/admin', 'admin')}
-            disabled={buttonLoading === 'admin'}>
-            {buttonLoading === 'admin' ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <Text style={styles.adminButtonText}>Admin Panel</Text>
-            )}
+            style={styles.button}
+            onPress={() => handleNavigation('/(tabs)/application')}>
+            <FileText size={24} color="#FFFFFF" />
+            <Text style={styles.buttonText}>Apply for Loan</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => handleNavigation('/admin')}>
+            <Settings size={24} color="#FFFFFF" />
+            <Text style={styles.buttonText}>Admin Panel</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+
+        <View style={styles.features}>
+          <Text style={styles.featuresTitle}>Features:</Text>
+          <Text style={styles.featureText}>• Quick approval in minutes</Text>
+          <Text style={styles.featureText}>• Competitive rates</Text>
+          <Text style={styles.featureText}>• Secure & encrypted</Text>
+          <Text style={styles.featureText}>• Pakistani phone verification</Text>
+        </View>
+      </View>
     </SafeAreaView>
   );
 }
@@ -222,168 +63,66 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F8FAFC',
   },
-  scrollView: {
+  content: {
     flex: 1,
     paddingHorizontal: 20,
-  },
-  welcomeContainer: {
-    flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
   },
-  welcomeTitle: {
+  header: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#1F2937',
     marginTop: 20,
     textAlign: 'center',
   },
-  welcomeSubtitle: {
+  subtitle: {
     fontSize: 16,
     color: '#6B7280',
     marginTop: 10,
     textAlign: 'center',
-    lineHeight: 24,
   },
-  loginButton: {
+  buttonContainer: {
+    marginBottom: 40,
+  },
+  button: {
     backgroundColor: '#3B82F6',
-    paddingHorizontal: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 16,
+    paddingHorizontal: 20,
     borderRadius: 12,
-    marginTop: 40,
+    marginBottom: 15,
   },
-  loginButtonText: {
+  buttonText: {
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+    marginLeft: 10,
   },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 20,
-  },
-  greeting: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1F2937',
-  },
-  notificationButton: {
-    padding: 8,
-  },
-  statusCard: {
+  features: {
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
     padding: 20,
-    marginBottom: 20,
+    borderRadius: 16,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 3,
   },
-  statusHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  statusTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1F2937',
-    marginLeft: 10,
-  },
-  statusText: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginBottom: 15,
-  },
-  loanDetails: {
-    borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
-    paddingTop: 15,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 10,
-  },
-  detailLabel: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  detailValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1F2937',
-  },
-  applyButton: {
-    backgroundColor: '#3B82F6',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
-    marginBottom: 30,
-  },
-  applyButtonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 10,
-  },
-  featuresContainer: {
-    marginBottom: 30,
-  },
   featuresTitle: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#1F2937',
     marginBottom: 15,
   },
-  featureCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
   featureText: {
     fontSize: 16,
-    color: '#1F2937',
-    marginLeft: 12,
-  },
-  selectAmountButton: {
-    backgroundColor: '#10B981',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginBottom: 15,
-    alignItems: 'center',
-  },
-  selectAmountButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  adminButton: {
-    backgroundColor: '#6366F1',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginTop: 20,
-    alignSelf: 'center',
-  },
-  adminButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '600',
+    color: '#6B7280',
+    marginBottom: 8,
   },
 });
