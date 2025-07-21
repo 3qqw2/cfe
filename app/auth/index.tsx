@@ -15,26 +15,45 @@ export default function LoginScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
 
-  const sendOTP = () => {
+  const sendOTP = async () => {
     if (!phoneNumber) {
       Alert.alert('Error', 'Please enter your phone number');
       return;
     }
     
+    setLoading(true);
+    
+    // Simulate sending OTP
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
     setStep(2);
+    setLoading(false);
     Alert.alert('OTP Sent', 'Demo OTP: 123456');
   };
 
-  const verifyOTP = () => {
+  const verifyOTP = async () => {
     if (!otp) {
       Alert.alert('Error', 'Please enter the OTP');
       return;
     }
 
-    Alert.alert('Success', 'Login successful!', [
-      { text: 'OK', onPress: () => router.replace('/(tabs)') }
-    ]);
+    setLoading(true);
+    
+    // Simulate OTP verification
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Accept any 6-digit OTP for demo
+    if (otp.length === 6) {
+      setLoading(false);
+      Alert.alert('Success', 'Login successful!', [
+        { text: 'OK', onPress: () => router.replace('/(tabs)') }
+      ]);
+    } else {
+      setLoading(false);
+      Alert.alert('Error', 'Please enter a valid 6-digit OTP');
+    }
   };
 
   return (
@@ -62,7 +81,9 @@ export default function LoginScreen() {
             </View>
 
             <TouchableOpacity style={styles.button} onPress={sendOTP}>
-              <Text style={styles.buttonText}>Send OTP</Text>
+              <Text style={styles.buttonText}>
+                {loading ? 'Sending...' : 'Send OTP'}
+              </Text>
             </TouchableOpacity>
           </>
         ) : (
@@ -80,12 +101,17 @@ export default function LoginScreen() {
             </View>
 
             <TouchableOpacity style={styles.button} onPress={verifyOTP}>
-              <Text style={styles.buttonText}>Verify OTP</Text>
+              <Text style={styles.buttonText}>
+                {loading ? 'Verifying...' : 'Verify OTP'}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.backButton}
-              onPress={() => setStep(1)}>
+              onPress={() => {
+                setStep(1);
+                setOtp('');
+              }}>
               <Text style={styles.backText}>← Change Number</Text>
             </TouchableOpacity>
           </>

@@ -19,28 +19,37 @@ export default function ApplicationScreen() {
     employmentType: '',
     monthlyIncome: '',
   });
+  const [loading, setLoading] = useState(false);
 
   const updateFormData = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!formData.fullName || !formData.nationalId || !formData.monthlyIncome) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
 
+    setLoading(true);
+    
+    // Simulate processing
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
     const income = parseInt(formData.monthlyIncome);
+    
     if (income >= 50000) {
+      setLoading(false);
       Alert.alert(
         'Congratulations!',
-        'Your loan has been auto-approved due to your high income!',
+        `Your loan has been auto-approved!\n\nApproved Amount: Rs. ${(income * 0.8).toLocaleString()}\nInterest Rate: 12.5%\nTerm: 12 months`,
         [{ text: 'OK' }]
       );
     } else {
+      setLoading(false);
       Alert.alert(
         'Application Submitted',
-        'Your loan application is now under review.',
+        'Your loan application is now under review. You will be notified within 24 hours.',
         [{ text: 'OK' }]
       );
     }
@@ -120,7 +129,9 @@ export default function ApplicationScreen() {
           </View>
 
           <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-            <Text style={styles.submitButtonText}>Submit Application</Text>
+            <Text style={styles.submitButtonText}>
+              {loading ? 'Processing...' : 'Submit Application'}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

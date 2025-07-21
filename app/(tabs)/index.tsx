@@ -26,21 +26,21 @@ export default function HomeScreen() {
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.button}
-            onPress={() => handleNavigation('/auth')}>
+            onPress={() => router.push('/auth')}>
             <User size={24} color="#FFFFFF" />
             <Text style={styles.buttonText}>Login / Register</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.button}
-            onPress={() => handleNavigation('/(tabs)/application')}>
+            onPress={() => router.push('/(tabs)/application')}>
             <FileText size={24} color="#FFFFFF" />
             <Text style={styles.buttonText}>Apply for Loan</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.button}
-            onPress={() => handleNavigation('/admin')}>
+            onPress={() => router.push('/admin')}>
             <Settings size={24} color="#FFFFFF" />
             <Text style={styles.buttonText}>Admin Panel</Text>
           </TouchableOpacity>
