@@ -167,11 +167,17 @@ export default function ApplicationScreen() {
 
     setLoading(true);
     try {
+      // Show loading feedback to user
+      console.log('Submitting application...');
+      
       await submitLoanApplication(user!.uid, formData);
       await refetch(); // Refresh loan status
+      
       Alert.alert(
         'Application Submitted',
-        'Your loan application has been submitted successfully and is now under review.',
+        formData.monthlyIncome && parseInt(formData.monthlyIncome) >= 50000 
+          ? 'Congratulations! Your loan has been auto-approved due to your high income.'
+          : 'Your loan application has been submitted successfully and is now under review.',
         [{ 
           text: 'OK', 
           onPress: () => {
@@ -191,6 +197,7 @@ export default function ApplicationScreen() {
         }]
       );
     } catch (error) {
+      console.error('Application submission error:', error);
       Alert.alert('Error', (error as any).message || 'Failed to submit application. Please try again.');
     } finally {
       setLoading(false);

@@ -32,40 +32,8 @@ export const getLoanApplications = async (): Promise<LoanApplication[]> => {
       }));
     }
     
-    // Return mock data if no stored applications
-    const mockApplications: LoanApplication[] = [
-      {
-        id: 'mock_1',
-        userId: 'user1',
-        fullName: 'Ahmed Khan',
-        nationalId: '42101-1234567-1',
-        address: 'House 123, Street 5, Lahore',
-        employmentType: 'Full-time',
-        monthlyIncome: 60000,
-        status: 'under_review',
-        submittedAt: new Date('2024-01-15'),
-        cnicImageUrl: 'https://images.pexels.com/photos/7876538/pexels-photo-7876538.jpeg',
-        selfieImageUrl: 'https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg',
-      },
-      {
-        id: 'mock_2',
-        userId: 'user2',
-        fullName: 'Fatima Ali',
-        nationalId: '42201-9876543-2',
-        address: 'Flat 45, Block B, Karachi',
-        employmentType: 'Self-employed',
-        monthlyIncome: 45000,
-        status: 'approved',
-        submittedAt: new Date('2024-01-10'),
-        cnicImageUrl: 'https://images.pexels.com/photos/7876538/pexels-photo-7876538.jpeg',
-        selfieImageUrl: 'https://images.pexels.com/photos/733872/pexels-photo-733872.jpeg',
-        loanAmount: 36000,
-        interestRate: 12.5,
-        repaymentDate: new Date('2024-12-31'),
-      },
-    ];
-    
-    return mockApplications;
+    // Return empty array if no applications
+    return [];
   } catch (error) {
     console.error('Error getting applications:', error);
     return [];

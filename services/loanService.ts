@@ -1,4 +1,4 @@
-// Mock loan service with proper application flow
+// Mock loan service with optimized image handling
 // Replace with actual Firebase Firestore implementation
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -30,8 +30,14 @@ interface LoanApplication {
   repaymentDate?: Date;
 }
 
-// Mock storage for applications
-let mockApplications: LoanApplication[] = [];
+// Helper function to create a placeholder image URL instead of storing large base64 data
+const createImagePlaceholder = (type: 'cnic' | 'selfie'): string => {
+  if (type === 'cnic') {
+    return 'https://images.pexels.com/photos/7876538/pexels-photo-7876538.jpeg?auto=compress&cs=tinysrgb&w=400';
+  } else {
+    return 'https://images.pexels.com/photos/91227/pexels-photo-91227.jpeg?auto=compress&cs=tinysrgb&w=400';
+  }
+};
 
 export const submitLoanApplication = async (
   userId: string,
@@ -43,66 +49,61 @@ export const submitLoanApplication = async (
     throw new Error('You already have a pending application. Please wait for review.');
   }
 
-  // Simulate file upload and data submission
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const newApplication: LoanApplication = {
-        id: 'app_' + Date.now(),
-        userId,
-        fullName: applicationData.fullName,
-        nationalId: applicationData.nationalId,
-        address: applicationData.address,
-        employmentType: applicationData.employmentType,
-        monthlyIncome: parseInt(applicationData.monthlyIncome),
-        status: 'under_review',
-        submittedAt: new Date(),
-        cnicImageUrl: applicationData.cnicImage || undefined,
-        selfieImageUrl: applicationData.selfieImage || undefined,
-      };
+  // Simulate processing time
+  await new Promise(resolve => setTimeout(resolve, 1500));
 
-      // Remove large image data before saving
-      const { cnicImageUrl, selfieImageUrl, ...applicationToStore } = newApplication;
+  try {
+    const newApplication: LoanApplication = {
+      id: 'app_' + Date.now(),
+      userId,
+      fullName: applicationData.fullName,
+      nationalId: applicationData.nationalId,
+      address: applicationData.address,
+      employmentType: applicationData.employmentType,
+      monthlyIncome: parseInt(applicationData.monthlyIncome),
+      status: 'under_review',
+      submittedAt: new Date(),
+      // Use placeholder URLs instead of storing large image data
+      cnicImageUrl: applicationData.cnicImage ? createImagePlaceholder('cnic') : undefined,
+      selfieImageUrl: applicationData.selfieImage ? createImagePlaceholder('selfie') : undefined,
+    };
 
-      // Auto-approve if income >= 50000
-      if (applicationToStore.monthlyIncome >= 50000) {
-        applicationToStore.status = 'approved';
-        applicationToStore.loanAmount = applicationToStore.monthlyIncome * 0.8;
-        applicationToStore.interestRate = 12.5;
-        applicationToStore.repaymentDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year from now
-      }
+    // Auto-approve if income >= 50000
+    if (newApplication.monthlyIncome >= 50000) {
+      newApplication.status = 'approved';
+      newApplication.loanAmount = newApplication.monthlyIncome * 0.8;
+      newApplication.interestRate = 12.5;
+      newApplication.repaymentDate = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // 1 year from now
+    }
 
-      // Only keep the latest application to avoid quota issues
-      mockApplications = [applicationToStore];
+    // Store user application
+    await AsyncStorage.setItem(`userApplication_${userId}`, JSON.stringify(newApplication));
 
-      // Log the actual data being saved
-      console.log('applicationToStore:', applicationToStore);
+    // Update all applications list
+    const existingApps = await AsyncStorage.getItem('allApplications');
+    let allApplications = existingApps ? JSON.parse(existingApps) : [];
+    
+    // Remove any existing application for this user and add the new one
+    allApplications = allApplications.filter((app: LoanApplication) => app.userId !== userId);
+    allApplications.push(newApplication);
+    
+    await AsyncStorage.setItem('allApplications', JSON.stringify(allApplications));
+    
+    console.log('Loan application submitted successfully:', {
+      id: newApplication.id,
+      userId,
+      status: newApplication.status
+    });
 
-      // Log the size of the data before saving
-      const userAppStr = JSON.stringify(applicationToStore);
-      const allAppsStr = JSON.stringify([applicationToStore]);
-      console.log('userApplication size:', userAppStr.length, 'bytes');
-      console.log('allApplications size:', allAppsStr.length, 'bytes');
-
-      // Prevent saving if data is too large (e.g., >100KB)
-      const MAX_SIZE = 100 * 1024; // 100KB
-      if (userAppStr.length > MAX_SIZE || allAppsStr.length > MAX_SIZE) {
-        console.error('Data too large to save! Not saving to AsyncStorage.');
-        return;
-      }
-
-      // Store in AsyncStorage for persistence
-      AsyncStorage.setItem('userApplication_' + userId, userAppStr);
-      AsyncStorage.setItem('allApplications', allAppsStr);
-      
-      console.log('Loan application submitted:', newApplication);
-      resolve();
-    }, 2000);
-  });
+  } catch (error) {
+    console.error('Error submitting application:', error);
+    throw new Error('Failed to submit application. Please try again.');
+  }
 };
 
 export const getUserApplication = async (userId: string): Promise<LoanApplication | null> => {
   try {
-    const stored = await AsyncStorage.getItem('userApplication_' + userId);
+    const stored = await AsyncStorage.getItem(`userApplication_${userId}`);
     if (stored) {
       const app = JSON.parse(stored);
       app.submittedAt = new Date(app.submittedAt);
@@ -168,7 +169,7 @@ export const selectLoanAmount = async (userId: string, amount: number): Promise<
     };
 
     // Save updated application
-    await AsyncStorage.setItem('userApplication_' + userId, JSON.stringify(updatedApp));
+    await AsyncStorage.setItem(`userApplication_${userId}`, JSON.stringify(updatedApp));
     
     // Update in all applications list
     const allApps = await AsyncStorage.getItem('allApplications');
